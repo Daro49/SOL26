@@ -1,25 +1,45 @@
-# test_sol_model.py
+"""
+Test
+
+Simple functionality of runtime object models of SOL26
+
+Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
+"""
+
 from interpreter.objectModel.sol_class import SolClass
 from interpreter.objectModel.sol_method import SolMethod
 
-def test_sol_class_lookup():
+
+def test_sol_class_lookup() -> None:
     print("Starting tests for SolClass...")
 
     # 1. SETUP: Class hierarachy
     # Object as root
     obj_class = SolClass(name="Object", superclass=None)
-    obj_class.methods["toString"] = SolMethod(selector="toString", params=[], native_function=lambda: "an Object")
+    obj_class.methods["toString"] = SolMethod(
+        selector="toString",
+        params=[],
+        native_function=lambda: "an Object"
+    )
 
     # Animal < Object
     animal_class = SolClass(name="Animal", superclass=obj_class)
-    animal_class.methods["eat"] = SolMethod(selector="eat", params=[], native_function=lambda: "nom nom")
+    animal_class.methods["eat"] = SolMethod(
+        selector="eat",
+        params=[],
+        native_function=lambda: "nom nom"
+    )
 
     # Dog < Animal
     dog_class = SolClass(name="Dog", superclass=animal_class)
-    dog_class.methods["bark"] = SolMethod(selector="bark", params=[], native_function=lambda: "woof!")
+    dog_class.methods["bark"] = SolMethod(
+        selector="bark",
+        params=[],
+        native_function=lambda: "woof!"
+    )
 
     # 2. ASSERT: Functionality
-    
+
     # Test A: Method in same class
     method = dog_class.lookup_method("bark")
     assert method is not None, "Dog should bark"
