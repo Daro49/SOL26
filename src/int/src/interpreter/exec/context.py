@@ -31,7 +31,7 @@ class Context:
         context: Context | None = self
         
         while context is not None:
-            if name in context._locals
+            if name in context._locals:
                 return context._locals[name]
             
             context = context.outer

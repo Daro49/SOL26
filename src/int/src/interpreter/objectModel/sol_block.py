@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..input_model import Assign
+    from interpreter.exec.context import Context
 
 @dataclass
 class SolBlock:
@@ -21,6 +22,6 @@ class SolBlock:
                 assign:     [ | this part ]
                 defining_context: needs the context the block was defined in
     """
-    paramters: list[str]
+    parameters: list[str]
     assign: list[Assign]
-    defining_context: ExecutionContext # TODO
+    defining_context: Context
