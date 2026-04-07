@@ -4,13 +4,13 @@ Input node walkthrough and execution
 Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
 """
 
-from interpreter.input_model import Method, Expr, Assign, Var
-
+from interpreter.input_model import Expr, Assign, Var, Literal, Send, Block
 from interpreter.exec.callstack import CallStack
 from interpreter.objectModel.sol_method import SolMethod
 from interpreter.objectModel.sol_object import SolObject
 from interpreter.objectModel.sol_block import SolBlock
 from interpreter.exec.context import Context
+from interpreter.exceptions import InterpreterError, ErrorCode
 
 from interpreter.runtime.singletons import SOL_NIL, SOL_TRUE, SOL_FALSE
 
@@ -120,6 +120,7 @@ class Execute:
         return value
 
     def visit_Var(self, node: Var, context: Context) -> SolObject:
+        """Returns context variable or singleton"""
         match node.name:
             case "self":    return context.self_object
             case "super":   return context.self_object
@@ -127,3 +128,58 @@ class Execute:
             case "true":    return SOL_TRUE
             case "false":   return SOL_FALSE
             case _:         return context.read(node.name)
+            
+    def visit_Literal(self, node: Literal, context: Context) -> SolObject:
+        """Creates object based on literal class"""
+        
+        match node.class_id:
+            case "Integer":
+                return SolObject(
+                    solclass=self.runtime.registry.get("Integer"),
+                    native_value=int(node.value)
+                )
+            
+            case "String":
+                return SolObject(
+                    solclass=self.runtime.registry.get("String"),
+                    native_value=node.value
+                )
+                
+            case "Nil":
+                return SOL_NIL
+            case "True":
+                return SOL_TRUE
+            case "False":
+                return SOL_FALSE
+            
+            case "class":
+                return SolObject(
+                    solclass=self.runtime.registry.get(node.value)
+                )
+            
+            case _:
+                raise InterpreterError(
+                    ErrorCode(52), "How did you get here\n"
+                )
+        
+    def visit_Send(self, node: Send, context: Context) -> SolObject:
+        if node.selector == "new":
+            return self.visit_Literal(node.receiver)
+        
+        # TODO from: message
+        # Get message arguments to list!!!
+        
+    
+    def visit_Block(self, node: Block, context: Context) -> SolObject:
+        """Wrapper into SolObject for later execution"""
+        
+        sol_block = SolBlock(
+            parameters=[p.name for p in node.parameters],
+            assign=node.assigns,
+            defining_context=context
+        ) #Capturing context!
+        
+        return SolObject(
+            solclass=self.runtime.registry.get("Block"),
+            native_value=sol_block
+        )
