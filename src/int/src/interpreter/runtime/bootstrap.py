@@ -8,6 +8,8 @@ import interpreter.runtime.singletons as singletons
 from interpreter.objectModel.sol_class import SolClass
 from interpreter.objectModel.sol_object import SolObject
 from interpreter.runtime.class_registry import ClassRegistry
+from interpreter.runtime.class_load import ClassLoad
+from interpreter.input_model import Program
 
 
 class Bootstrap:
@@ -16,8 +18,9 @@ class Bootstrap:
     def __init__(self, registry: ClassRegistry):
         """Store reference for registry"""
         self.registry = registry
+        self.class_load = ClassLoad(registry)
 
-    def bootstrap(self) -> None:
+    def bootstrap(self, program: Program) -> None:
         """Main method"""
         classes = self._make_builtin_classes()
 
@@ -28,6 +31,8 @@ class Bootstrap:
         # TODO: Register built-in methods to built-in classes
 
         self.registry.register_dict(classes)
+        
+        self.class_load.load(program)
 
 
     def _make_builtin_classes(self) -> dict[str, SolClass]:

@@ -10,6 +10,7 @@ from interpreter.objectModel.sol_method import SolMethod
 from interpreter.objectModel.sol_object import SolObject
 from interpreter.objectModel.sol_block import SolBlock
 from interpreter.exec.context import Context
+from interpreter.runtime.runtime import Runtime
 from interpreter.exceptions import InterpreterError, ErrorCode
 
 from interpreter.runtime.singletons import SOL_NIL, SOL_TRUE, SOL_FALSE
@@ -164,10 +165,24 @@ class Execute:
         
     def visit_Send(self, node: Send, context: Context) -> SolObject:
         if node.selector == "new":
-            return self.visit_Literal(node.receiver)
+            return self.visit_Expr(node.receiver)
         
         # TODO from: message
-        # Get message arguments to list!!!
+        
+        receiver = self.visit_Expr(node.receiver, context)
+        args = [self.visit_Expr(arg.expr, context) for arg in node.args]
+        lookup_class = receiver.solclass
+        
+        if node.receiver.var == "super":
+            lookup_class = lookup_class.superclass
+            
+        return self.runtime.dispatch.send(
+            receiver: receiver,
+            selector: node.selector,
+            args: args,
+            context: context.child(),
+            start_class: lookup_class
+        )
         
     
     def visit_Block(self, node: Block, context: Context) -> SolObject:
