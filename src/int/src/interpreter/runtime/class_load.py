@@ -68,7 +68,6 @@ class ClassLoad:
             for method_node in class_node.methods:
                 
                 method = SolMethod(
-                    selector=method_node.selector,
                     params=[p.name for p in method_node.block.parameters],
                     body=method_node,
                     native_function=None

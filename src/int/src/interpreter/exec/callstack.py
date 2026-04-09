@@ -17,7 +17,7 @@ class CallStack:
     
     def __init__(self) -> None:
         """Instance frames list"""
-        self._frames = list[Frame] = {}
+        self._frames: list[Frame] = []
 
     def push(self, receiver: str, selector: str) -> None:
         """Add frame on top"""

@@ -7,6 +7,6 @@ Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
 
 from ..objectModel.sol_object import SolObject
 
-SOL_NIL: SolObject
-SOL_TRUE: SolObject
-SOL_FALSE: SolObject
+SOL_NIL: SolObject = None
+SOL_TRUE: SolObject = None
+SOL_FALSE: SolObject = None

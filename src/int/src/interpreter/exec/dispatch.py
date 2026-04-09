@@ -49,7 +49,13 @@ class Dispatch:
         if method.is_native:
             return method.native_function(self.execute.runtime, receiver, args)
         
-        return self.execute.execute_method(method, receiver, args, context)
+        return self.execute.execute_method(
+            method,
+            receiver,
+            selector,
+            args,
+            context
+        )
 
     def _dnu(
         self,
@@ -67,7 +73,8 @@ class Dispatch:
             
             raise InterpreterError(
                 ErrorCode(51),
-                f"'{selector}' not found in instance of: {receiver.solclass}"
+                f"'{selector}' not found in instance of: "
+                f"{receiver.solclass.name}"
             )
             
         elif len(args) == 1:
@@ -79,7 +86,7 @@ class Dispatch:
             
             raise InterpreterError(
                 ErrorCode(54),
-                f"Attribute collision with method: {receiver.solclass}"
+                f"Attribute collision with method: {selector}"
             )
         
         raise InterpreterError(

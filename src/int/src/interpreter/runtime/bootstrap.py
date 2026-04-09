@@ -11,6 +11,10 @@ from interpreter.runtime.class_registry import ClassRegistry
 from interpreter.runtime.class_load import ClassLoad
 from interpreter.input_model import Program
 
+from interpreter.builtin import object, nil, integer, string
+
+BUILTINS = [object, nil, integer, string]
+
 
 class Bootstrap:
     """Orchestrates the registration and linking of all built-in types."""
@@ -28,9 +32,9 @@ class Bootstrap:
         singletons.SOL_TRUE = SolObject(solclass=classes["True"], native_value=True)
         singletons.SOL_FALSE = SolObject(solclass=classes["False"], native_value=False)
 
-        # TODO: Register built-in methods to built-in classes
-
         self.registry.register_dict(classes)
+        
+        self._register_methods(classes)
         
         self.class_load.load(program)
 
@@ -58,3 +62,11 @@ class Bootstrap:
         ]
 
         return {c.name: c for c in class_list}
+    
+    def _register_methods(self, classes: dict[str, SolClass]) -> None:
+        
+        for module in BUILTINS:
+            name = getattr(module, "CLASS_NAME", None)
+            
+            if name and name in classes:
+                module.register(classes[name], classes)

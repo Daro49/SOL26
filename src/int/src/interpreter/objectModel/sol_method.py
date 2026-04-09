@@ -17,13 +17,11 @@ if TYPE_CHECKING:
 class SolMethod:
     """
     Method representation at runtime
-    Attributes: selector:           method selector
-                params:             method parameters
+    Attributes: params:             method parameters
                 body:               body if method is defined by user
                 native_function:    if method is a native built-in function
     """
 
-    selector: str
     params: list[str]
     body: Method | None = None
     native_function: Callable[..., Any] | None = None

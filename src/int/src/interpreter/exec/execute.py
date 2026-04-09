@@ -4,14 +4,19 @@ Input node walkthrough and execution
 Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
 """
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from interpreter.input_model import Expr, Assign, Var, Literal, Send, Block
 from interpreter.exec.callstack import CallStack
 from interpreter.objectModel.sol_method import SolMethod
 from interpreter.objectModel.sol_object import SolObject
 from interpreter.objectModel.sol_block import SolBlock
 from interpreter.exec.context import Context
-from interpreter.runtime.runtime import Runtime
 from interpreter.exceptions import InterpreterError, ErrorCode
+
+if TYPE_CHECKING:
+    from interpreter.runtime.runtime import Runtime
 
 from interpreter.runtime.singletons import SOL_NIL, SOL_TRUE, SOL_FALSE
 
@@ -29,6 +34,7 @@ class Execute:
         self,
         method: SolMethod,
         receiver: SolObject,
+        selector: str,
         args: list[SolObject],
         outer_context: Context | None = None
         ) -> SolObject:
@@ -43,7 +49,7 @@ class Execute:
         Returns: result of the last assign as object
         """
         
-        self.call_stack.push(receiver.solclass.name, method.selector)
+        self.call_stack.push(receiver.solclass.name, selector)
         context = Context(self_object=receiver, outer=outer_context)
         
         # Optionally write arguments as locals in the new context
@@ -165,7 +171,7 @@ class Execute:
         
     def visit_Send(self, node: Send, context: Context) -> SolObject:
         if node.selector == "new":
-            return self.visit_Expr(node.receiver)
+            return self.visit_Expr(node.receiver, context)
         
         # TODO from: message
         
@@ -177,11 +183,11 @@ class Execute:
             lookup_class = lookup_class.superclass
             
         return self.runtime.dispatch.send(
-            receiver: receiver,
-            selector: node.selector,
-            args: args,
-            context: context.child(),
-            start_class: lookup_class
+            receiver=receiver,
+            selector=node.selector,
+            args=args,
+            context=context,
+            start_class=lookup_class
         )
         
     
