@@ -29,3 +29,19 @@ COPY src/int/pyproject.toml ./src/int/
 RUN pip install -r requirements-dev.txt
 
 # -=-=-=-=-=-=-=-=-=-=-=- INTERPRET -=-=-=-=-=-=-=-=-=-=-=- #
+
+# -=-=-=-=-=-=-=-=-=-=-=-= TESTER =-=-=-=-=-=-=-=-=-=-=-=-= #
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libc6-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY src/sol2xml/requirements.txt ./requirements-sol2xml.txt
+RUN cat requirements-sol2xml.txt
+RUN pip install -r requirements-sol2xml.txt
+
+# -=-=-=-=-=-=-=-=-=-=-=-= TESTER =-=-=-=-=-=-=-=-=-=-=-=-= #

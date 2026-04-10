@@ -11,9 +11,9 @@ from interpreter.runtime.class_registry import ClassRegistry
 from interpreter.runtime.class_load import ClassLoad
 from interpreter.input_model import Program
 
-from interpreter.builtin import object, nil, integer, string
+from interpreter.builtin import object, nil, integer, string, boolean
 
-BUILTINS = [object, nil, integer, string]
+BUILTINS = [object, nil, integer, string, boolean]
 
 
 class Bootstrap:

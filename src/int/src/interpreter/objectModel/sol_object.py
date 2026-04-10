@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from interpreter.objectModel.sol_class import SolClass
+    from interpreter.objectModel.sol_method import SolMethod
 
 @dataclass
 class SolObject:
@@ -24,6 +25,7 @@ class SolObject:
 
     solclass: SolClass
     instance_variables: dict[str, SolObject] = field(default_factory=dict)
+    instance_methods: dict[str, SolMethod] = field(default_factory=dict)
     native_value: Any = None
 
 

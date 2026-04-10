@@ -68,7 +68,8 @@ class Execute:
     
     def execute_block(
         self,
-        block: SolBlock,
+        runtime: Runtime,
+        receiver: SolObject,
         args: list[SolObject]
         ) -> SolObject:
         """
@@ -81,6 +82,8 @@ class Execute:
 
         Returns: result of the last assign as object
         """
+        
+        block = receiver.native_value
         
         context = block.defining_context.child()
         
@@ -196,11 +199,22 @@ class Execute:
         
         sol_block = SolBlock(
             parameters=[p.name for p in node.parameters],
-            assign=node.assigns,
+            assigns=node.assigns,
             defining_context=context
         ) #Capturing context!
         
+        block_method = SolMethod(
+            params=[p.name for p in node.parameters],
+            native_function=self.execute_block
+        )
+        
+        selector = "value"
+        
+        if node.arity > 0:
+            selector = "value:" * node.arity
+        
         return SolObject(
             solclass=self.runtime.registry.get("Block"),
+            instance_methods={selector: block_method},
             native_value=sol_block
         )

@@ -18,7 +18,9 @@ def register(_class: SolClass, _classes: dict[str, SolClass]) -> None:
         args: list[SolObject]
         ) -> SolObject:
         
-        string = runtime.io.readline().strip()
+        #string = runtime.io.readline().strip()
+        string = input().strip()
+        
         return SolObject(
             solclass=runtime.registry.get("String"),
             native_value=string
@@ -30,8 +32,10 @@ def register(_class: SolClass, _classes: dict[str, SolClass]) -> None:
         args: list[SolObject]
         ) -> SolObject:
 
-        runtime.io.write(receiver.native_value)
-        runtime.io.flush()
+        #runtime.io.write(receiver.native_value)
+        #runtime.io.flush()
+        
+        print(receiver.native_value)
         
         return receiver
     
@@ -117,6 +121,7 @@ def register(_class: SolClass, _classes: dict[str, SolClass]) -> None:
         )
         
     _class.methods.update({
+        "read":             SolMethod([], native_function=_read),
         "print":            SolMethod([], native_function=_print),
         "equalTo:":         SolMethod(["$a"], native_function=_equalTo),
         "asString":         SolMethod([], native_function=_asString),

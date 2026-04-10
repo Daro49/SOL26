@@ -40,8 +40,16 @@ class Dispatch:
         Returns: result of the method/attr
         """
         
-        # Beware if not None
-        method = start_class.lookup_method(selector)
+        method = None
+        
+        # is not a super call, start from instance methods
+        if start_class == receiver.solclass:
+            method = receiver.instance_methods.get(selector)
+
+        # not in instance methods, find in class
+        # !!! only Block has instance methods currently !!!
+        if method is None:
+            method = start_class.lookup_method(selector)
         
         if method is None:
             return self._dnu(receiver, selector, args, start_class)

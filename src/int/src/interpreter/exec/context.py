@@ -22,7 +22,7 @@ class Context:
     """
     
     self_object: SolObject
-    outer: Context
+    outer: Context = None
     _locals: dict[str, SolObject] = field(default_factory=dict, repr=False)
     
     def read(self, name: str) -> SolObject:

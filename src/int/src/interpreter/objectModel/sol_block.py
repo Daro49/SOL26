@@ -23,5 +23,5 @@ class SolBlock:
                 defining_context: needs the context the block was defined in
     """
     parameters: list[str]
-    assign: list[Assign]
+    assigns: list[Assign]
     defining_context: Context
