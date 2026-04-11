@@ -13,7 +13,8 @@ from interpreter.objectModel.sol_method import SolMethod
 from interpreter.objectModel.sol_object import SolObject
 from interpreter.objectModel.sol_block import SolBlock
 from interpreter.exec.context import Context
-from interpreter.exceptions import InterpreterError, ErrorCode
+from interpreter.exceptions import InterpreterError
+from interpreter.error_codes import ErrorCode
 
 if TYPE_CHECKING:
     from interpreter.runtime.runtime import Runtime
@@ -21,9 +22,7 @@ if TYPE_CHECKING:
 from interpreter.runtime.singletons import SOL_NIL, SOL_TRUE, SOL_FALSE
 
 class Execute:
-    """
-    Class that walks input model and executes
-    """
+    """Class that walks input model and executes"""
     
     def __init__(self, runtime: Runtime):
         """Needs reference to runtime (ClassRegistry) and own CallStack"""
@@ -59,6 +58,12 @@ class Execute:
         try:
             result = SOL_NIL
             
+            if method.body is None:
+                raise InterpreterError(
+                    ErrorCode(52),
+                    "Method body not populated correctly"
+                )
+            
             for assign in method.body.block.assigns:
                 result = self.visit_Assign(assign, context)
                 
@@ -85,7 +90,7 @@ class Execute:
         
         block = receiver.native_value
         
-        context = block.defining_context.child()
+        context = block.defining_context
         
         for param, arg in zip(block.parameters, args):
             context.write(param, arg)
@@ -111,6 +116,11 @@ class Execute:
         
         if node.send is not None:
             return self.visit_Send(node.send, context)
+        
+        raise InterpreterError(
+            ErrorCode(20),
+            "Malformed XML"
+        )
     
     def visit_Assign(self, node: Assign, context: Context) -> SolObject:
         """
@@ -169,10 +179,12 @@ class Execute:
             
             case _:
                 raise InterpreterError(
-                    ErrorCode(52), "How did you get here\n"
+                    ErrorCode(52), "How did you get here"
                 )
         
     def visit_Send(self, node: Send, context: Context) -> SolObject:
+        """Send node handler"""
+        
         if node.selector == "new":
             return self.visit_Expr(node.receiver, context)
         
@@ -182,7 +194,10 @@ class Execute:
         args = [self.visit_Expr(arg.expr, context) for arg in node.args]
         lookup_class = receiver.solclass
         
-        if node.receiver.var == "super":
+        if (node.receiver.var is not None
+            and node.receiver.var.name == "super" 
+            and lookup_class.superclass is not None
+        ):
             lookup_class = lookup_class.superclass
             
         return self.runtime.dispatch.send(
@@ -196,9 +211,29 @@ class Execute:
     
     def visit_Block(self, node: Block, context: Context) -> SolObject:
         """Wrapper into SolObject for later execution"""
+       
+        parameter_names = [p.name for p in node.parameters]
+        
+        # -^-^-^-^-^-^-^-^ BLOCK CHECKS -^-^-^-^-^-^-^-^ #
+        
+        if len(parameter_names) != len(set(parameter_names)):
+            raise InterpreterError(
+                ErrorCode(35),
+                "Name collision of Block parameters!"
+            )
+        
+        for assign in node.assigns:
+            if assign.target.name in parameter_names:
+                raise InterpreterError(
+                    ErrorCode(34),
+                    f"Assigning to a parameter: '{assign.target.name}' "
+                    "in Block!"
+                )
+                
+        # -^-^-^-^-^-^-^-^ BLOCK CHECKS -^-^-^-^-^-^-^-^ #
         
         sol_block = SolBlock(
-            parameters=[p.name for p in node.parameters],
+            parameters=parameter_names,
             assigns=node.assigns,
             defining_context=context
         ) #Capturing context!

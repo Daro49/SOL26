@@ -10,10 +10,12 @@ from interpreter.objectModel.sol_object import SolObject
 from interpreter.runtime.class_registry import ClassRegistry
 from interpreter.runtime.class_load import ClassLoad
 from interpreter.input_model import Program
+from interpreter.exceptions import InterpreterError
+from interpreter.error_codes import ErrorCode
 
-from interpreter.builtin import object, nil, integer, string, boolean
+from interpreter.builtin import object, nil, integer, string, true, false, block
 
-BUILTINS = [object, nil, integer, string, boolean]
+BUILTINS = [object, nil, integer, string, true, false, block]
 
 
 class Bootstrap:
@@ -26,6 +28,9 @@ class Bootstrap:
 
     def bootstrap(self, program: Program) -> None:
         """Main method"""
+        
+        self._static_check(program)
+        
         classes = self._make_builtin_classes()
 
         singletons.SOL_NIL = SolObject(solclass=classes["Nil"])
@@ -64,9 +69,24 @@ class Bootstrap:
         return {c.name: c for c in class_list}
     
     def _register_methods(self, classes: dict[str, SolClass]) -> None:
+        """Registers built-in methods to it's classes"""
         
         for module in BUILTINS:
             name = getattr(module, "CLASS_NAME", None)
             
             if name and name in classes:
-                module.register(classes[name], classes)
+                module.register(classes[name])
+                
+    def _static_check(self, program: Program) -> None:
+        """Additional static checks that are not checked elsewhere"""
+        
+        for _class in program.classes:
+            for method in _class.methods:
+                arity = method.selector.count(":")
+                
+                if arity != method.block.arity:
+                    raise InterpreterError(
+                        ErrorCode(33),
+                        f"Method: '{method}' arity "
+                        f"doesn't match it's block arity!"
+                    )

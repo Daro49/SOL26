@@ -8,12 +8,11 @@ from interpreter.exec.execute import Execute
 from interpreter.objectModel.sol_object import SolObject
 from interpreter.objectModel.sol_class import SolClass
 from interpreter.exec.context import Context
-from interpreter.exceptions import InterpreterError, ErrorCode
+from interpreter.exceptions import InterpreterError
+from interpreter.error_codes import ErrorCode
 
 class Dispatch:
-    """
-    Message dispatcher, needs execute reference
-    """ 
+    """Message dispatcher, needs execute reference""" 
     
     def __init__(self, execute: Execute):
         """Setting execute reference"""
@@ -48,14 +47,23 @@ class Dispatch:
 
         # not in instance methods, find in class
         # !!! only Block has instance methods currently !!!
-        if method is None:
+        if method is None and start_class is not None:
             method = start_class.lookup_method(selector)
         
         if method is None:
             return self._dnu(receiver, selector, args, start_class)
         
         if method.is_native:
-            return method.native_function(self.execute.runtime, receiver, args)
+            
+            if method.native_function is None:
+                raise InterpreterError(
+                    ErrorCode(52),
+                    "Native function not bound properly"
+                )
+                
+            result = method.native_function(self.execute.runtime, receiver, args)
+            
+            return result
         
         return self.execute.execute_method(
             method,
@@ -72,8 +80,7 @@ class Dispatch:
         args: list[SolObject],
         start_class: SolClass | None
         ) -> SolObject:
-        
-        """Does not understand handler"""
+        """'Does not understand' handler"""
         
         if len(args) == 0:
             if selector in receiver.instance_variables:
@@ -85,7 +92,7 @@ class Dispatch:
                 f"{receiver.solclass.name}"
             )
             
-        elif len(args) == 1:
+        elif len(args) == 1 and start_class is not None:
             method = start_class.lookup_method(selector[:-1])
             
             if method is None:

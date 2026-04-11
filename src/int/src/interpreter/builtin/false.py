@@ -1,7 +1,12 @@
+"""
+Built-in methods for False class
+
+Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
+"""
+
 from interpreter.objectModel.sol_class import SolClass
 from interpreter.objectModel.sol_object import SolObject
 from interpreter.objectModel.sol_method import SolMethod
-from interpreter.exec.dispatch import Dispatch
 from interpreter.exec.context import Context
 import interpreter.runtime.singletons as singletons
 
@@ -10,24 +15,21 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from interpreter.runtime.runtime import Runtime
 
-CLASS_NAME = "True"
+CLASS_NAME = "False"
 
-def register(_class: SolClass, _classes: dict[str, SolClass]) -> None:
+def register(_class: SolClass) -> None:
+    """Register False methods"""
     
     def _asString(
         runtime: Runtime,
         receiver: SolObject,
         args: list[SolObject]
         ) -> SolObject:
-        
-        value = "true"
-        
-        if receiver.solclass == "False":
-            value = "false"
-        
+        """false"""
+
         return SolObject(
             solclass=runtime.registry.get("String"),
-            native_value=value
+            native_value="false"
         )
         
     def _not(
@@ -35,31 +37,25 @@ def register(_class: SolClass, _classes: dict[str, SolClass]) -> None:
         receiver: SolObject,
         args: list[SolObject]
         ) -> SolObject:
+        """negation"""
         
-        if receiver.solclass == "False":
-            return singletons.SOL_TRUE
-        
-        return singletons.SOL_FALSE
+        return singletons.SOL_TRUE
     
     def _and(
         runtime: Runtime,
         receiver: SolObject,
         args: list[SolObject]
         ) -> SolObject:
-        
-        if receiver.solclass == "False":
-            return singletons.SOL_FALSE
-        
-        return _send_value(runtime, args[0])
-        
+        """&&"""
+
+        return singletons.SOL_FALSE
+    
     def _or(
         runtime: Runtime,
         receiver: SolObject,
         args: list[SolObject]
         ) -> SolObject:
-        
-        if receiver.solclass == "True":
-            return singletons.SOL_TRUE
+        """||"""
         
         return _send_value(runtime, args[0])
     
@@ -68,9 +64,7 @@ def register(_class: SolClass, _classes: dict[str, SolClass]) -> None:
         receiver: SolObject,
         args: list[SolObject]
         ) -> SolObject:
-        
-        if receiver.solclass == "True":
-            return _send_value(runtime, args[0])
+        """if in SOL26"""
         
         return _send_value(runtime, args[1])
     
@@ -79,9 +73,10 @@ def register(_class: SolClass, _classes: dict[str, SolClass]) -> None:
         receiver: SolObject,
         args: list[SolObject]
         ) -> SolObject:
+        """true"""
         
         return singletons.SOL_TRUE
-        
+    
     def _send_value(
         runtime: Runtime,
         receiver: SolObject,
@@ -95,16 +90,12 @@ def register(_class: SolClass, _classes: dict[str, SolClass]) -> None:
             start_class=receiver.solclass
         )
         
-    boolean_methods = {
+    _class.methods.update({
         "asString":        SolMethod([], native_function=_asString),
         "not":             SolMethod([], native_function=_not),
         "and:":            SolMethod(["$a"], native_function=_and),
         "or:":             SolMethod(["$a"], native_function=_or),
         "ifTrue:ifFalse:": SolMethod(["$a", "$b"], native_function=_trueFalse),
         "isBoolean":       SolMethod([], native_function=_isBoolean)
-    }
-
-    _classes.get("True").methods.update(boolean_methods)
-    _classes.get("False").methods.update(boolean_methods)
-    
+    })
     

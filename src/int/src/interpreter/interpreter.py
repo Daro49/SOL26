@@ -61,4 +61,11 @@ class Interpreter:
         logger.info("Executing program")
         
         runtime = Runtime(input_io)
+        
+        if self.current_program is None:
+            raise InterpreterError(
+                ErrorCode(52),
+                "User program did not load properly"
+            )
+        
         runtime.run_main(self.current_program)

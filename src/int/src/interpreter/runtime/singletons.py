@@ -6,7 +6,8 @@ Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
 """
 
 from ..objectModel.sol_object import SolObject
+from typing import cast, Any
 
-SOL_NIL: SolObject = None
-SOL_TRUE: SolObject = None
-SOL_FALSE: SolObject = None
+SOL_NIL: SolObject = cast(Any, None)
+SOL_TRUE: SolObject = cast(Any, None)
+SOL_FALSE: SolObject = cast(Any, None)

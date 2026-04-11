@@ -8,7 +8,8 @@ from interpreter.runtime.class_registry import ClassRegistry
 from interpreter.objectModel.sol_class import SolClass
 from interpreter.objectModel.sol_method import SolMethod
 from interpreter.input_model import Program
-from interpreter.exceptions import InterpreterError, ErrorCode
+from interpreter.exceptions import InterpreterError
+from interpreter.error_codes import ErrorCode
 
 class ClassLoad:
     """
@@ -48,6 +49,12 @@ class ClassLoad:
                     is_native=False
                 )
             )
+            
+        if not self.registry.has("Main"):
+            raise InterpreterError(
+                ErrorCode(31),
+                "Missing class 'Main'!"
+            )
         
     def _superclasses(self, program: Program) -> None:
         """Register classes' parents"""
@@ -74,3 +81,4 @@ class ClassLoad:
                 )
                 
                 _class.methods[method_node.selector] = method
+  

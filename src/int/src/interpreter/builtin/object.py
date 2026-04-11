@@ -1,3 +1,9 @@
+"""
+Built-in methods for Object class
+
+Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
+"""
+
 from interpreter.objectModel.sol_class import SolClass
 from interpreter.objectModel.sol_object import SolObject
 from interpreter.objectModel.sol_method import SolMethod
@@ -10,12 +16,15 @@ if TYPE_CHECKING:
 
 CLASS_NAME = "Object"
 
-def register(_class: SolClass, _classes: dict[str, SolClass]) -> None:
+def register(_class: SolClass) -> None:
+    """Register Object methods"""
+    
     def _identicalTo(
         runtime: Runtime,
         receiver: SolObject,
         args: list[SolObject]
         ) -> SolObject:
+        """is"""
         
         if receiver is args[0]:
             return singletons.SOL_TRUE
@@ -27,6 +36,7 @@ def register(_class: SolClass, _classes: dict[str, SolClass]) -> None:
         receiver: SolObject,
         args: list[SolObject]
         ) -> SolObject:
+        """=="""
         
         rec_val = receiver.native_value
         arg_val = args[0].native_value
@@ -44,14 +54,16 @@ def register(_class: SolClass, _classes: dict[str, SolClass]) -> None:
         receiver: SolObject,
         args: list[SolObject]
         ) -> SolObject:
+        """Object has no internal value"""
         
-        return SolObject(solclass=_classes.get("String"), native_value='')
+        return SolObject(solclass=runtime.get_class("String"), native_value='')
     
     def _isClass(
         runtime: Runtime,
         receiver: SolObject,
         args: list[SolObject]
         ) -> SolObject:
+        """is specific class"""
         
         return singletons.SOL_FALSE
     
