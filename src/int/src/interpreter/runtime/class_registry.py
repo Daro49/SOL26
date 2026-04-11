@@ -29,7 +29,10 @@ class ClassRegistry:
         except KeyError:
             from interpreter.error_codes import ErrorCode
             from interpreter.exceptions import InterpreterError
-            raise InterpreterError(ErrorCode(32), f"Unknown class: {name}")
+            raise InterpreterError(
+                ErrorCode(32),
+                f"Unknown class: {name}"
+            ) from None
 
     def has(self, name: str) -> bool:
         """Existence check"""

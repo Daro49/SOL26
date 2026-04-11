@@ -4,20 +4,21 @@ React to messages (sends) and finds the right method to call execute
 Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
 """
 
-from interpreter.exec.execute import Execute
-from interpreter.objectModel.sol_object import SolObject
-from interpreter.objectModel.sol_class import SolClass
-from interpreter.exec.context import Context
-from interpreter.exceptions import InterpreterError
 from interpreter.error_codes import ErrorCode
+from interpreter.exceptions import InterpreterError
+from interpreter.exec.context import Context
+from interpreter.exec.execute import Execute
+from interpreter.objectModel.sol_class import SolClass
+from interpreter.objectModel.sol_object import SolObject
+
 
 class Dispatch:
-    """Message dispatcher, needs execute reference""" 
-    
+    """Message dispatcher, needs execute reference"""
+
     def __init__(self, execute: Execute):
         """Setting execute reference"""
         self.execute = execute
-        
+
     def send(
         self,
         receiver: SolObject,
@@ -26,7 +27,7 @@ class Dispatch:
         context: Context,
         start_class: SolClass | None = None
         ) -> SolObject:
-        
+
         """
         Takes selector and receiver, finds appropriate method/attr
 
@@ -35,12 +36,12 @@ class Dispatch:
                 args:           optional method arguments
                 context:        execute context
                 start_class:    where to start the lookup
-   
+
         Returns: result of the method/attr
         """
-        
+
         method = None
-        
+
         # is not a super call, start from instance methods
         if start_class == receiver.solclass:
             method = receiver.instance_methods.get(selector)
@@ -49,22 +50,20 @@ class Dispatch:
         # !!! only Block has instance methods currently !!!
         if method is None and start_class is not None:
             method = start_class.lookup_method(selector)
-        
+
         if method is None:
             return self._dnu(receiver, selector, args, start_class)
-        
+
         if method.is_native:
-            
+
             if method.native_function is None:
                 raise InterpreterError(
                     ErrorCode(52),
                     "Native function not bound properly"
                 )
-                
-            result = method.native_function(self.execute.runtime, receiver, args)
-            
-            return result
-        
+
+            return method.native_function(self.execute.runtime, receiver, args)
+
         return self.execute.execute_method(
             method,
             receiver,
@@ -81,29 +80,29 @@ class Dispatch:
         start_class: SolClass | None
         ) -> SolObject:
         """'Does not understand' handler"""
-        
+
         if len(args) == 0:
             if selector in receiver.instance_variables:
                 return receiver.get_instance_var(selector)
-            
+
             raise InterpreterError(
                 ErrorCode(51),
                 f"'{selector}' not found in instance of: "
                 f"{receiver.solclass.name}"
             )
-            
-        elif len(args) == 1 and start_class is not None:
+
+        if len(args) == 1 and start_class is not None:
             method = start_class.lookup_method(selector[:-1])
-            
+
             if method is None:
                 receiver.set_instance_var(selector[:-1], args[0])
                 return receiver
-            
+
             raise InterpreterError(
                 ErrorCode(54),
                 f"Attribute collision with method: {selector}"
             )
-        
+
         raise InterpreterError(
             ErrorCode(51),
             f"Does not understand: method '{selector}' not found"

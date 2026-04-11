@@ -18,7 +18,6 @@ from pydantic import ValidationError
 from interpreter.error_codes import ErrorCode
 from interpreter.exceptions import InterpreterError
 from interpreter.input_model import Program
-
 from interpreter.runtime.runtime import Runtime
 
 logger = logging.getLogger(__name__)
@@ -59,13 +58,13 @@ class Interpreter:
         Executes the currently loaded program, using the provided input stream as standard input.
         """
         logger.info("Executing program")
-        
+
         runtime = Runtime(input_io)
-        
+
         if self.current_program is None:
             raise InterpreterError(
                 ErrorCode(52),
                 "User program did not load properly"
             )
-        
+
         runtime.run_main(self.current_program)

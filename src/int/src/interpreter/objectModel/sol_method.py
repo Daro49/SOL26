@@ -6,10 +6,10 @@ Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from interpreter.objectModel.sol_object import SolObject
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol, Callable
+from typing import TYPE_CHECKING, Protocol
+
+from interpreter.objectModel.sol_object import SolObject
 
 if TYPE_CHECKING:
     from interpreter.input_model import Method
@@ -17,8 +17,15 @@ if TYPE_CHECKING:
 
 class NativeCallable(Protocol):
     """Protocol for every native function"""
-    
-    def __call__(self, runtime: Runtime, receiver: SolObject, args: list[SolObject]) -> "SolObject": ...
+
+    def __call__(
+        self,
+        runtime: Runtime,
+        receiver: SolObject,
+        args: list[SolObject]
+        ) -> SolObject:
+        """How the call should look like"""
+        ...
 
 @dataclass
 class SolMethod:

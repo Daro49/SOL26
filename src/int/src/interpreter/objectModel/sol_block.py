@@ -11,8 +11,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..input_model import Assign
     from interpreter.exec.context import Context
+
+    from ..input_model import Assign
 
 @dataclass
 class SolBlock:
