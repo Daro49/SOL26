@@ -7,6 +7,8 @@ Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
 from typing import TYPE_CHECKING
 
 import interpreter.runtime.singletons as singletons
+from interpreter.error_codes import ErrorCode
+from interpreter.exceptions import InterpreterError
 from interpreter.objectModel.sol_class import SolClass
 from interpreter.objectModel.sol_method import SolMethod
 from interpreter.objectModel.sol_object import SolObject
@@ -23,6 +25,8 @@ def register(_class: SolClass) -> None:
         "identicalTo:": SolMethod(["$a"], native_function=_identicalto),
         "equalTo:":     SolMethod(["$a"], native_function=_equalto),
         "asString":     SolMethod([],     native_function=_asstring),
+        "new":          SolMethod([],     native_function=_new),
+        "from:":        SolMethod(["$a"], native_function=_from)
     })
 
     type_checks = [
@@ -83,3 +87,31 @@ def _isclass(
     """is specific class"""
 
     return singletons.SOL_FALSE
+
+def _new(
+    runtime: Runtime,
+    receiver: SolObject,
+    args: list[SolObject]
+    ) -> SolObject:
+    """Constructor new"""
+
+    return receiver
+
+def _from(
+    runtime: Runtime,
+    receiver: SolObject,
+    args: list[SolObject]
+    ) -> SolObject:
+    "Contructor from:"
+
+    if receiver.solclass.internal_attr != args[0].solclass.internal_attr:
+        raise InterpreterError(
+            ErrorCode(53),
+            f"Can't create instance: '{receiver.solclass.name}', "
+            "mismatching instance attribute"
+        )
+
+    receiver.native_value = args[0].native_value
+    receiver.instance_variables = args[0].instance_variables
+
+    return receiver

@@ -7,10 +7,18 @@ Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum, auto
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from interpreter.objectModel.sol_method import SolMethod
+
+class InternalAttribute(Enum):
+    """Declares what type of native_value do instances from their class have"""
+    NONE = auto()
+    STRING = auto(),
+    INTEGER = auto(),
+    BLOCK = auto()
 
 @dataclass
 class SolClass:
@@ -25,6 +33,7 @@ class SolClass:
     name: str
     superclass: SolClass | None
     methods: dict[str, SolMethod] = field(default_factory=dict)
+    internal_attr: InternalAttribute = InternalAttribute.NONE
     is_native: bool = False
 
 

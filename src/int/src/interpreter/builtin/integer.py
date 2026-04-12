@@ -34,7 +34,8 @@ def register(_class: SolClass) -> None:
         "asString":     SolMethod([], native_function=_asstring),
         "asInteger":    SolMethod([], native_function=_asinteger),
         "isNumber":     SolMethod([], native_function=_isnumber),
-        "timesRepeat:": SolMethod(["$a"], native_function=_timesrepeat)
+        "timesRepeat:": SolMethod(["$a"], native_function=_timesrepeat),
+        "new":          SolMethod([], native_function=_new)
     })
 
 def int_op(
@@ -181,3 +182,13 @@ def _timesrepeat(
         )
 
     return result
+
+def _new(
+    runtime: Runtime,
+    receiver: SolObject,
+    args: list[SolObject]
+    ) -> SolObject:
+    "Constructor new"
+
+    receiver.native_value = 0
+    return receiver

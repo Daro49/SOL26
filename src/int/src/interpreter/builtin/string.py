@@ -34,7 +34,8 @@ def register(_class: SolClass) -> None:
         ),
 
         "length":           SolMethod([], native_function=_length),
-        "isString":         SolMethod([], native_function=_isstring)
+        "isString":         SolMethod([], native_function=_isstring),
+        "new":              SolMethod([], native_function=_new)
     })
 
 def _read(
@@ -161,3 +162,13 @@ def _isstring(
     """true"""
 
     return singletons.SOL_TRUE
+
+def _new(
+    runtime: Runtime,
+    receiver: SolObject,
+    args: list[SolObject]
+    ) -> SolObject:
+    "Constructor new"
+
+    receiver.native_value = ""
+    return receiver

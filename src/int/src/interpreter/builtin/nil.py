@@ -7,6 +7,7 @@ Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
 from typing import TYPE_CHECKING
 
 import interpreter.runtime.singletons as singletons
+from interpreter.builtin.object_ import _new
 from interpreter.objectModel.sol_class import SolClass
 from interpreter.objectModel.sol_method import SolMethod
 from interpreter.objectModel.sol_object import SolObject
@@ -21,7 +22,9 @@ def register(_class: SolClass) -> None:
 
     _class.methods.update({
         "asString": SolMethod([], native_function=_asstring),
-        "isNil":    SolMethod([], native_function=_isnil)
+        "isNil":    SolMethod([], native_function=_isnil),
+        "new":      SolMethod([], native_function=_new),
+        "from:":    SolMethod(["$a"], native_function=_new)
     })
 
 def _asstring(

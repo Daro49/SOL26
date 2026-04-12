@@ -63,7 +63,10 @@ class ClassLoad:
         for class_node in program.classes:
 
             _class = self.registry.get(class_node.name)
-            _class.superclass = self.registry.get(class_node.parent)
+            parent = self.registry.get(class_node.parent)
+
+            _class.superclass = parent
+            _class.internal_attr = parent.internal_attr
 
 
     def _methods(self, program: Program) -> None:

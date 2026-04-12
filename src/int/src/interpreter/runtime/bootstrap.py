@@ -9,7 +9,7 @@ from interpreter.builtin import block, false, integer, nil, object_, string, tru
 from interpreter.error_codes import ErrorCode
 from interpreter.exceptions import InterpreterError
 from interpreter.input_model import Program
-from interpreter.objectModel.sol_class import SolClass
+from interpreter.objectModel.sol_class import InternalAttribute, SolClass
 from interpreter.objectModel.sol_object import SolObject
 from interpreter.runtime.class_load import ClassLoad
 from interpreter.runtime.class_registry import ClassRegistry
@@ -60,9 +60,26 @@ class Bootstrap:
             SolClass(name="Nil", superclass=object_c, is_native=True),
             SolClass(name="True", superclass=object_c, is_native=True),
             SolClass(name="False", superclass=object_c, is_native=True),
-            SolClass(name="Integer", superclass=object_c, is_native=True),
-            SolClass(name="String", superclass=object_c, is_native=True),
-            SolClass(name="Block", superclass=object_c, is_native=True)
+
+            SolClass(
+                name="Integer",
+                superclass=object_c,
+                is_native=True,
+                internal_attr=InternalAttribute.INTEGER
+            ),
+
+            SolClass(
+                name="String",
+                superclass=object_c,
+                is_native=True,
+                internal_attr=InternalAttribute.STRING
+            ),
+            SolClass(
+                name="Block",
+                superclass=object_c,
+                is_native=True,
+                internal_attr=InternalAttribute.BLOCK
+            )
         ]
 
         return {c.name: c for c in class_list}

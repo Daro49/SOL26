@@ -199,11 +199,6 @@ class Execute:
     def visit_send(self, node: Send, context: Context) -> SolObject:
         """Send node handler"""
 
-        if node.selector == "new":
-            return self.visit_expr(node.receiver, context)
-
-        # TODO from: message
-
         receiver = self.visit_expr(node.receiver, context)
         args = [self.visit_expr(arg.expr, context) for arg in node.args]
         lookup_class = receiver.solclass
