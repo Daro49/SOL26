@@ -45,8 +45,7 @@ def _read(
     ) -> SolObject:
     """read from input"""
 
-    #string = runtime.io.readline().strip()
-    string = input().strip()
+    string = runtime.io.readline().strip()
 
     return SolObject(
         solclass=runtime.registry.get("String"),

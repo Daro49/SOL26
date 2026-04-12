@@ -16,9 +16,9 @@ ENV PYTHONUNBUFFERED=1
 
 FROM base AS check
 
-ADD config /config
+COPY int/requirements*.txt /int/
 
-RUN pip install -r /config/requirements.txt -r /config/requirements-dev.txt
+RUN pip install -r /int/requirements.txt -r /int/requirements-dev.txt
 
 COPY --from=node:25.2.1-slim /usr/local/bin /usr/local/bin
 COPY --from=node:25.2.1-slim /usr/local/lib /usr/local/lib
@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /tester
 COPY tester/package.json ./
 COPY tester/package-lock.json ./
+
 RUN npm install
 
 WORKDIR /
@@ -39,11 +40,11 @@ ENTRYPOINT ["/bin/bash"]
 
 FROM base AS runtime
 
-COPY config/requirements.txt /config
-RUN pip install -r /config/requirements.txt
+COPY int/requirements.txt /
+RUN pip install -r /requirements.txt
 
-COPY int/solint.py /int
-ADD int/interpreter /int
+COPY int/solint.py /int/
+ADD int/interpreter/ /int/interpreter/
 
 ENTRYPOINT ["python", "/int/solint.py"]
 
@@ -64,9 +65,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 
-COPY /config/requirements.txt /config/requirements.txt
-COPY /config/requirements-sol2xml.txt /config/requirements-sol2xml.txt
+COPY /int/requirements.txt /int/requirements.txt
+COPY /int/requirements-sol2xml.txt /int/requirements-sol2xml.txt
 
-RUN pip install -r /config/requirements.txt -r /config/requirements-sol2xml.txt
+RUN pip install -r /int/requirements.txt -r /int/requirements-sol2xml.txt
 
 # -=-=-=-=-=-=-=-=-=-=-=-= TESTER =-=-=-=-=-=-=-=-=-=-=-=-= #
