@@ -7,30 +7,53 @@
 # ---- Runtime -------------------------------------------- #
 
 ARG PYTHON_VERSION=3.14.3
+ARG NODE_VERSION=25.2.1
+
 FROM python:${PYTHON_VERSION}-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-WORKDIR /app
+FROM base AS check
+
+ADD config /config
+
+RUN pip install -r /config/requirements.txt -r /config/requirements-dev.txt
+
+COPY --from=node:25.2.1-slim /usr/local/bin /usr/local/bin
+COPY --from=node:25.2.1-slim /usr/local/lib /usr/local/lib
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libatomic1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tester
+COPY tester/package.json ./
+COPY tester/package-lock.json ./
+RUN npm install
+
+WORKDIR /
+
+ENTRYPOINT ["/bin/bash"]
+
 
 FROM base AS runtime
 
-COPY src/int/requirements.txt .
-RUN pip install -r requirements.txt
-COPY src/int/src/ ./src/int/src/
+COPY config/requirements.txt /config
+RUN pip install -r /config/requirements.txt
 
-# ---- Dev ------------------------------------------------ #
+COPY int/solint.py /int
+ADD int/interpreter /int
 
-FROM runtime AS dev
-
-COPY src/int/requirements-dev.txt .
-COPY src/int/pyproject.toml ./src/int/
-RUN pip install -r requirements-dev.txt
+ENTRYPOINT ["python", "/int/solint.py"]
 
 # -=-=-=-=-=-=-=-=-=-=-=- INTERPRET -=-=-=-=-=-=-=-=-=-=-=- #
 
 # -=-=-=-=-=-=-=-=-=-=-=-= TESTER =-=-=-=-=-=-=-=-=-=-=-=-= #
+
+# TODO build-test
+
+FROM base AS test
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
@@ -40,8 +63,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY src/sol2xml/requirements.txt ./requirements-sol2xml.txt
-RUN cat requirements-sol2xml.txt
-RUN pip install -r requirements-sol2xml.txt
+
+COPY /config/requirements.txt /config/requirements.txt
+COPY /config/requirements-sol2xml.txt /config/requirements-sol2xml.txt
+
+RUN pip install -r /config/requirements.txt -r /config/requirements-sol2xml.txt
 
 # -=-=-=-=-=-=-=-=-=-=-=-= TESTER =-=-=-=-=-=-=-=-=-=-=-=-= #
