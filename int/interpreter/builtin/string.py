@@ -59,10 +59,7 @@ def _print(
     ) -> SolObject:
     """print to output"""
 
-    #runtime.io.write(receiver.native_value)
-    #runtime.io.flush()
-
-    print(receiver.native_value)
+    print(receiver.native_value.encode().decode("unicode_escape"))
 
     return receiver
 

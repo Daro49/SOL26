@@ -1,3 +1,6 @@
 # Local dev dependencies
 .devcontainer
 tests/
+tester/node_modules
+tester/dist
+xdaranm00*

@@ -18,9 +18,21 @@ import { existsSync, lstatSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
-import { TestReport } from "./models.js";
+import {
+  CategoryReport,
+  TestCaseDefinition,
+  TestCaseReport,
+  TestReport,
+  TestResult,
+  UnexecutedReason,
+} from "./models.js";
 
 import { pino } from "pino";
+
+import { TestCase } from "./parser.js";
+import { findTestCases } from "./find.js";
+import { filterTestCases } from "./filter.js";
+import { executeTestCase } from "./execute.js";
 
 const logger = pino({
   transport: {
@@ -196,6 +208,72 @@ function parseArguments(): CliArguments {
   return args;
 }
 
+class CategoryCount {
+  private total: number = 0;
+  private passed: number = 0;
+  private readonly results: Record<string, TestCaseReport> = {};
+
+  public record(def: TestCaseDefinition, report: TestCaseReport): void {
+    this.total += def.points;
+
+    if (report.result == TestResult.PASSED) {
+      this.passed += def.points;
+    }
+
+    this.results[def.name] = report;
+  }
+
+  public toReport(): CategoryReport {
+    return new CategoryReport(this.total, this.passed, this.results);
+  }
+}
+
+class Report {
+  private discovered_test_cases: TestCaseDefinition[] = [];
+  private readonly unexecuted: Record<string, UnexecutedReason> = {};
+  private readonly categories: Map<string, CategoryCount> = new Map();
+
+  public setDiscovered(def: TestCaseDefinition[]): void {
+    this.discovered_test_cases = def;
+  }
+
+  public addUnexecuted(name: string, reason: UnexecutedReason): void {
+    this.unexecuted[name] = reason;
+  }
+
+  public addUnexecutedBatch(batch: Record<string, UnexecutedReason>): void {
+    for (const [name, reason] of Object.entries(batch)) {
+      this.unexecuted[name] = reason;
+    }
+  }
+
+  public recordResult(tc: TestCase, report: TestCaseReport): void {
+    const { definition } = tc;
+
+    if (!this.categories.has(definition.category)) {
+      this.categories.set(definition.category, new CategoryCount());
+    }
+
+    this.categories.get(definition.category)?.record(definition, report);
+  }
+
+  public finalise(includeResults: boolean): TestReport {
+    const results: Record<string, CategoryReport> = {};
+
+    if (includeResults) {
+      for (const [category, accumulator] of this.categories) {
+        results[category] = accumulator.toReport();
+      }
+    }
+
+    return new TestReport({
+      discovered_test_cases: this.discovered_test_cases,
+      unexecuted: this.unexecuted,
+      results,
+    });
+  }
+}
+
 function main(): void {
   /**
    * The main entry point for the SOL26 integration testing script.
@@ -217,11 +295,66 @@ function main(): void {
     logger.level = "info";
   }
 
-  // TODO: Your code for discovering and executing the test cases goes here.
+  const report = new Report();
+
+  const { tests, unexecuted } = findTestCases(args.tests_dir, args.recursive, logger);
 
   // Example of how to write the final report:
-  const report = new TestReport({ discovered_test_cases: [], unexecuted: {}, results: {} });
-  writeResult(report, args.output);
+  //const report = new TestReport({ discovered_test_cases: [], unexecuted: {}, results: {} });
+  //writeResult(report, args.output);
+
+  report.setDiscovered(tests.map((tc) => tc.definition));
+  report.addUnexecutedBatch(unexecuted);
+
+  logger.info(
+    "Successfully parsed %d test case(s), %d could not be loaded.",
+    tests.length,
+    Object.keys(unexecuted).length
+  );
+
+  const { include, exclude } = filterTestCases(tests, {
+    include: args.include,
+    include_category: args.include_category,
+    include_test: args.include_test,
+    exclude: args.exclude,
+    exclude_category: args.exclude_category,
+    exclude_test: args.exclude_test,
+    regex: args.regex_filters,
+  });
+
+  report.addUnexecutedBatch(exclude);
+
+  logger.info(
+    "%d test case(s) selected, %d filtered out.",
+    include.length,
+    Object.keys(exclude).length
+  );
+
+  if (args.dry_run) {
+    writeResult(report.finalise(false), args.output);
+    return;
+  }
+
+  // Execute
+  const executorConfig = {
+    parserBin: "sol_to_xml.py",
+    interpreterBin: "/int/solint.py",
+    logger,
+  };
+
+  for (const tc of include) {
+    logger.info("Executing: %s", tc.definition.name);
+    const result = executeTestCase(tc, executorConfig);
+
+    if (result instanceof UnexecutedReason) {
+      report.addUnexecuted(tc.definition.name, result);
+    } else {
+      report.recordResult(tc, result);
+      logger.info("  => %s", result.result);
+    }
+  }
+
+  writeResult(report.finalise(true), args.output);
 }
 
 main();
