@@ -8,6 +8,7 @@ from interpreter.error_codes import ErrorCode
 from interpreter.exceptions import InterpreterError
 from interpreter.exec.context import Context
 from interpreter.exec.execute import Execute
+from interpreter.objectModel.sol_block import SolBlock
 from interpreter.objectModel.sol_class import SolClass
 from interpreter.objectModel.sol_object import SolObject
 
@@ -79,17 +80,16 @@ class Dispatch:
         args: list[SolObject],
         start_class: SolClass | None
         ) -> SolObject:
-        """'Does not understand' handler"""
+        """'Does not understand handler"""
+
+        if isinstance(receiver.native_value, SolBlock):
+            raise self._raiseerr(selector)
 
         if len(args) == 0:
             if selector in receiver.instance_variables:
                 return receiver.get_instance_var(selector)
 
-            raise InterpreterError(
-                ErrorCode(51),
-                f"'{selector}' not found in instance of: "
-                f"{receiver.solclass.name}"
-            )
+            raise self._raiseerr(selector)
 
         if len(args) == 1 and start_class is not None:
             method = start_class.lookup_method(selector[:-1])
@@ -103,7 +103,11 @@ class Dispatch:
                 f"Attribute collision with method: {selector}"
             )
 
-        raise InterpreterError(
+        raise self._raiseerr(selector)
+
+
+    def _raiseerr(self, selector: str) -> InterpreterError:
+        return InterpreterError(
             ErrorCode(51),
             f"Does not understand: method '{selector}' not found"
         )

@@ -7,7 +7,6 @@ Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
 from typing import TYPE_CHECKING
 
 import interpreter.runtime.singletons as singletons
-from interpreter.builtin.object_ import _new
 from interpreter.objectModel.sol_class import SolClass
 from interpreter.objectModel.sol_method import SolMethod
 from interpreter.objectModel.sol_object import SolObject
@@ -44,3 +43,11 @@ def _isnil(
     """true"""
 
     return singletons.SOL_TRUE
+
+def _new(
+    runtime: Runtime,
+    receiver: SolObject,
+    args: list[SolObject]
+    ) -> SolObject:
+
+    return singletons.SOL_NIL

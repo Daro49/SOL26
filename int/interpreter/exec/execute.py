@@ -20,7 +20,7 @@ from interpreter.objectModel.sol_object import SolObject
 if TYPE_CHECKING:
     from interpreter.runtime.runtime import Runtime
 
-from interpreter.runtime.singletons import SOL_FALSE, SOL_NIL, SOL_TRUE
+import interpreter.runtime.singletons as singletons
 
 
 class Execute:
@@ -58,7 +58,7 @@ class Execute:
             context.write(param, arg)
 
         try:
-            result = SOL_NIL
+            result = singletons.SOL_NIL
 
             if method.body is None:
                 raise InterpreterError(
@@ -97,10 +97,13 @@ class Execute:
         for param, arg in zip(block.parameters, args, strict=False):
             context.write(param, arg)
 
-        result = SOL_NIL
+        result = singletons.SOL_NIL
 
         for assign in block.assigns:
             result = self.visit_assign(assign, context)
+
+        for name in block.parameters:
+            context.delete(name)
 
         return result
 
@@ -152,13 +155,13 @@ class Execute:
                 return context.self_object
 
             case "nil":
-                return SOL_NIL
+                return singletons.SOL_NIL
 
             case "true":
-                return SOL_TRUE
+                return singletons.SOL_TRUE
 
             case "false":
-                return SOL_FALSE
+                return singletons.SOL_FALSE
 
             case _:
                 return context.read(node.name)
@@ -180,11 +183,11 @@ class Execute:
                 )
 
             case "Nil":
-                return SOL_NIL
+                return singletons.SOL_NIL
             case "True":
-                return SOL_TRUE
+                return singletons.SOL_TRUE
             case "False":
-                return SOL_FALSE
+                return singletons.SOL_FALSE
 
             case "class":
                 return SolObject(
@@ -222,24 +225,6 @@ class Execute:
         """Wrapper into SolObject for later execution"""
 
         parameter_names = [p.name for p in node.parameters]
-
-        # -^-^-^-^-^-^-^-^ BLOCK CHECKS -^-^-^-^-^-^-^-^ #
-
-        if len(parameter_names) != len(set(parameter_names)):
-            raise InterpreterError(
-                ErrorCode(35),
-                "Name collision of Block parameters!"
-            )
-
-        for assign in node.assigns:
-            if assign.target.name in parameter_names:
-                raise InterpreterError(
-                    ErrorCode(34),
-                    f"Assigning to a parameter: '{assign.target.name}' "
-                    "in Block!"
-                )
-
-        # -^-^-^-^-^-^-^-^ BLOCK CHECKS -^-^-^-^-^-^-^-^ #
 
         sol_block = SolBlock(
             parameters=parameter_names,

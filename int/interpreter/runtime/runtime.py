@@ -8,7 +8,6 @@ from typing import TextIO
 
 from interpreter.error_codes import ErrorCode
 from interpreter.exceptions import InterpreterError
-from interpreter.exec.context import Context
 from interpreter.exec.dispatch import Dispatch
 from interpreter.exec.execute import Execute
 from interpreter.input_model import Program
@@ -80,6 +79,6 @@ class Runtime:
             receiver=receiver,
             selector=selector,
             args=args,
-            context=Context(receiver),
+            context=receiver.native_value.defining_context,
             start_class=receiver.solclass
         )

@@ -47,7 +47,7 @@ def _whiletrue(
 
     condition = runtime.sendvalue(receiver)
 
-    while condition.native_value:
+    while condition is singletons.SOL_TRUE:
 
         result = runtime.sendvalue(args[0])
 
@@ -73,10 +73,8 @@ def _new(
         native_function=runtime.execute.execute_block
     )
 
-    receiver.native_value = SolObject(
+    return SolObject(
         solclass=runtime.get_class("Block"),
         instance_methods={"value": method},
         native_value=block
     )
-
-    return receiver

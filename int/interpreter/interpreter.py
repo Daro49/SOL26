@@ -46,6 +46,9 @@ class Interpreter:
             raise InterpreterError(
                 error_code=ErrorCode.INT_XML, message="Error parsing input XML"
             ) from e
+
+        self._static_check_blocks(xml_tree.getroot())
+
         try:
             self.current_program = Program.from_xml_tree(xml_tree.getroot())  # type: ignore
         except ValidationError as e:
@@ -68,3 +71,27 @@ class Interpreter:
             )
 
         runtime.run_main(self.current_program)
+
+    def _static_check_blocks(self, root: etree._Element) -> None:
+        """Check all blocks for parameter collisions and assignments to parameters."""
+
+        for block in root.findall(".//block"):
+
+            parameters = block.findall("parameter")
+            param_names = [p.get("name") for p in parameters]
+
+            if len(param_names) != len(set(param_names)):
+                raise InterpreterError(
+                    ErrorCode(35),
+                    "Name collision of Block parameters!"
+                )
+
+            for assign in block.findall("assign"):
+                var_elem = assign.find("var")
+                if var_elem is not None:
+                    var_name = var_elem.get("name")
+                    if var_name in param_names:
+                        raise InterpreterError(
+                            ErrorCode(34),
+                            f"Assigning to a parameter: '{var_name}' in Block!"
+                        )

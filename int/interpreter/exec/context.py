@@ -50,6 +50,11 @@ class Context:
 
         self._locals[name] = value
 
+    def delete(self, name: str) -> None:
+        """Deletes local variable, used for parameters"""
+
+        self._locals.pop(name)
+
     def child(self, self_object: SolObject) -> Context:
         """Creates nested context, for blocks and calls"""
 

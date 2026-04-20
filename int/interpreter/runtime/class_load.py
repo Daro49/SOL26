@@ -68,6 +68,8 @@ class ClassLoad:
             _class.superclass = parent
             _class.internal_attr = parent.internal_attr
 
+            self._check_circular_inheritance(program)
+
 
     def _methods(self, program: Program) -> None:
         """Register classes' methods"""
@@ -78,6 +80,13 @@ class ClassLoad:
 
             for method_node in class_node.methods:
 
+                if method_node.selector in _class.methods:
+                    raise InterpreterError(
+                        ErrorCode(35),
+                        f"Redefinition of method: '{method_node.selector}' "
+                        f"in class: '{_class.name}'!"
+                    )
+
                 method = SolMethod(
                     params=[p.name for p in method_node.block.parameters],
                     body=method_node,
@@ -85,3 +94,26 @@ class ClassLoad:
                 )
 
                 _class.methods[method_node.selector] = method
+
+    def _check_circular_inheritance(self, program: Program) -> None:
+        """Detect circular inheritance chains"""
+
+        for class_node in program.classes:
+            self._detect_cycle(class_node.name, set())
+
+    def _detect_cycle(self, class_name: str, visited: set[str]) -> None:
+        """Follow the inheritance chain to detect cycles"""
+
+        if class_name in visited:
+            raise InterpreterError(
+                ErrorCode(35),
+                f"Circular inheritance detected involving class: {class_name}"
+            )
+
+        _class = self.registry.get(class_name)
+
+        if _class.superclass is None:
+            return
+
+        visited.add(class_name)
+        self._detect_cycle(_class.superclass.name, visited)

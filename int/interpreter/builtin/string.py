@@ -45,7 +45,7 @@ def _read(
     ) -> SolObject:
     """read from input"""
 
-    string = runtime.io.readline().strip()
+    string = runtime.io.readline().rstrip("\n")
 
     return SolObject(
         solclass=runtime.registry.get("String"),
@@ -59,7 +59,7 @@ def _print(
     ) -> SolObject:
     """print to output"""
 
-    print(receiver.native_value.encode().decode("unicode_escape"))
+    print(receiver.native_value, end="")
 
     return receiver
 
@@ -124,8 +124,9 @@ def _startend(
     ) -> SolObject:
     """substring"""
 
-    start = args[0].native_value
-    end = args[1].native_value
+    # 1 based indexing to 0 of python
+    start = args[0].native_value - 1
+    end = args[1].native_value - 1
 
     if (args[0].solclass.name != "Integer" or start < 0
         or

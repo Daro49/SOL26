@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 import interpreter.runtime.singletons as singletons
 from interpreter.error_codes import ErrorCode
 from interpreter.exceptions import InterpreterError
-from interpreter.exec.context import Context
 from interpreter.objectModel.sol_class import SolClass
 from interpreter.objectModel.sol_method import NativeCallable, SolMethod
 from interpreter.objectModel.sol_object import SolObject
@@ -53,7 +52,10 @@ def int_op(
 
         arg_val = args[0].native_value
         if not isinstance(arg_val, int):
-            return singletons.SOL_FALSE
+            raise InterpreterError(
+                ErrorCode(53),
+                f"Bad argument type: {arg_val}!"
+            )
 
         return func(runtime, receiver.native_value, arg_val)
     return wrapper
@@ -177,7 +179,7 @@ def _timesrepeat(
             receiver=args[0],
             selector="value:",
             args=[arg],
-            context=Context(args[0]),
+            context=args[0].native_value.defining_context,
             start_class=args[0].solclass
         )
 

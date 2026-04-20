@@ -112,6 +112,6 @@ def _from(
         )
 
     receiver.native_value = args[0].native_value
-    receiver.instance_variables = args[0].instance_variables
+    receiver.instance_variables = args[0].instance_variables.copy()
 
     return receiver

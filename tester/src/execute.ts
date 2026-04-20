@@ -45,7 +45,8 @@ function runProcess(bin: string, args: string[], logger: Logger): ProcessResult 
     };
   }
 
-  writeFileSync("temp.xml", result.stdout ?? "");
+  const tempXml = "temp.xml";
+  writeFileSync(tempXml, result.stdout ?? "");
 
   return {
     exitCode: result.status ?? -1,
@@ -156,40 +157,66 @@ function executeInterpretOnly(
 }
 
 function executeCombined(tc: TestCase, config: ExecutorConfig): TestCaseReport | UnexecutedReason {
-
   const sourceFile = writeTempFile(tc.sourceCode, ".sol");
+  const tempXml = "temp.xml";
 
-  // SOL to XML
+  try {
+    // SOL to XML
+    const pr = runProcess(config.parserBin, [sourceFile], config.logger);
 
-  const pr = runProcess(config.parserBin, [sourceFile], config.logger);
+    if (pr.failed)
+      return new UnexecutedReason(
+        UnexecutedReasonCode.CANNOT_EXECUTE,
+        `Parser could not be executed: ${pr.stderr}`
+      );
 
-  if (pr.failed)
-    return new UnexecutedReason(
-      UnexecutedReasonCode.CANNOT_EXECUTE,
-      `Parser could not be executed: ${pr.stderr}`
-    );
+    if (pr.exitCode !== 0)
+      return new TestCaseReport(
+        TestResult.UNEXPECTED_PARSER_EXIT_CODE,
+        pr.exitCode,
+        null,
+        pr.stdout,
+        pr.stderr
+      );
 
-  if (pr.exitCode !== 0)
+    // XML to Output
+    const interpreter_cli: string[] = ["--source", tempXml];
+
+    if (tc.definition.stdin_file != null) {
+      interpreter_cli.push("--input", tc.definition.stdin_file);
+    }
+
+    const ir = runProcess(config.interpreterBin, interpreter_cli, config.logger);
+
+    if (!tc.definition.expected_interpreter_exit_codes?.includes(ir.exitCode))
+      return new TestCaseReport(
+        TestResult.UNEXPECTED_INTERPRETER_EXIT_CODE,
+        pr.exitCode,
+        ir.exitCode,
+        pr.stdout,
+        pr.stderr,
+        ir.stdout,
+        ir.stderr
+      );
+
+    if (ir.exitCode === 0 && tc.expectedStdout !== null) {
+      const diff = diffStrings(tc.expectedStdout, ir.stdout);
+
+      if (diff !== null)
+        return new TestCaseReport(
+          TestResult.INTERPRETER_RESULT_DIFFERS,
+          pr.exitCode,
+          ir.exitCode,
+          pr.stdout,
+          pr.stderr,
+          ir.stdout,
+          ir.stderr,
+          diff
+        );
+    }
+
     return new TestCaseReport(
-      TestResult.UNEXPECTED_PARSER_EXIT_CODE,
-      pr.exitCode,
-      null,
-      pr.stdout,
-      pr.stderr
-    );
-
-  // XML to Output
-  const interpreter_cli: string[] = ["--source", "temp.xml"];
-
-  if (tc.definition.stdin_file != null) {
-    interpreter_cli.push("--input", tc.definition.stdin_file);
-  }
-
-  const ir = runProcess(config.interpreterBin, interpreter_cli, config.logger);
-
-  if (!tc.definition.expected_interpreter_exit_codes?.includes(ir.exitCode))
-    return new TestCaseReport(
-      TestResult.UNEXPECTED_INTERPRETER_EXIT_CODE,
+      TestResult.PASSED,
       pr.exitCode,
       ir.exitCode,
       pr.stdout,
@@ -197,32 +224,10 @@ function executeCombined(tc: TestCase, config: ExecutorConfig): TestCaseReport |
       ir.stdout,
       ir.stderr
     );
-
-  if (ir.exitCode === 0 && tc.expectedStdout !== null) {
-    const diff = diffStrings(tc.expectedStdout, ir.stdout);
-
-    if (diff !== null)
-      return new TestCaseReport(
-        TestResult.INTERPRETER_RESULT_DIFFERS,
-        pr.exitCode,
-        ir.exitCode,
-        pr.stdout,
-        pr.stderr,
-        ir.stdout,
-        ir.stderr,
-        diff
-      );
+  } finally {
+    if (existsSync(sourceFile)) unlinkSync(sourceFile);
+    if (existsSync(tempXml)) unlinkSync(tempXml);
   }
-
-  return new TestCaseReport(
-    TestResult.PASSED,
-    pr.exitCode,
-    ir.exitCode,
-    pr.stdout,
-    pr.stderr,
-    ir.stdout,
-    ir.stderr
-  );
 }
 
 export function executeTestCase(
