@@ -51,7 +51,11 @@ class Execute:
         """
 
         self.call_stack.push(receiver.solclass.name, selector)
-        context = Context(self_object=receiver, outer=outer_context)
+        context = Context(
+            self_object=receiver,
+            outer=outer_context,
+            static_class=method.defined_on
+        )
 
         # Optionally write arguments as locals in the new context
         for param, arg in zip(method.params, args, strict=False):
@@ -207,9 +211,16 @@ class Execute:
 
         if (node.receiver.var is not None
             and node.receiver.var.name == "super"
-            and lookup_class.superclass is not None
         ):
-            lookup_class = lookup_class.superclass
+            static = context.static_class
+            
+            if static is None or static.superclass is None:
+                raise InterpreterError(
+                    ErrorCode(52),
+                    "Super used in a class with no superclass"
+                )
+            
+            lookup_class = static.superclass
 
         return self.runtime.dispatch.send(
             receiver=receiver,

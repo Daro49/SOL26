@@ -89,8 +89,9 @@ class ClassLoad:
 
                 method = SolMethod(
                     params=[p.name for p in method_node.block.parameters],
+                    defined_on=_class,
                     body=method_node,
-                    native_function=None
+                    native_function=None,
                 )
 
                 _class.methods[method_node.selector] = method

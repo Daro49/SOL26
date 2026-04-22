@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
 from interpreter.objectModel.sol_object import SolObject
+from interpreter.objectModel.sol_class import SolClass
 
 if TYPE_CHECKING:
     from interpreter.input_model import Method
@@ -37,6 +38,7 @@ class SolMethod:
     """
 
     params: list[str]
+    defined_on: SolClass | None = None
     body: Method | None = None
     native_function: NativeCallable | None = None
 

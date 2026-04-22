@@ -27,6 +27,7 @@ class Context:
 
     self_object: SolObject
     outer: Context | None = None
+    static_class: SolClass | None = None
     _locals: dict[str, SolObject] = field(default_factory=dict, repr=False)
 
     def read(self, name: str) -> SolObject:
@@ -72,5 +73,6 @@ class Context:
 
         return Context(
             self_object=self_object,
-            outer=self
+            outer=self, 
+            static_class=self.static_class
         )

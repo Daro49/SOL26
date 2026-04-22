@@ -92,6 +92,10 @@ class Bootstrap:
 
             if name and name in classes:
                 module.register(classes[name])
+                
+        for _class in classes.values():
+            for method in _class.methods.values():
+                method.defined_on = _class
 
     def _static_check(self, program: Program) -> None:
         """Additional static checks that are not checked elsewhere"""
