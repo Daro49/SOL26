@@ -45,8 +45,20 @@ class Context:
             f"Use of undefined variable: '{name}'!"
         )
 
+    def write_local(self, name: str, value: SolObject) -> None:
+        """Used for parameters and new locals."""
+        self._locals[name] = value
+
     def write(self, name: str, value: SolObject) -> None:
         """Saves object to local context"""
+        
+        context: Context | None = self
+        
+        while context is not None:
+            if name in context._locals:
+                context._locals[name] = value
+                return
+            context = context.outer
 
         self._locals[name] = value
 

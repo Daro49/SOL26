@@ -1,5 +1,6 @@
 """
-Execution stack
+Execution stack, used for debugging only
+could be used for run in future
 
 Author: Matej Daranský <xdaranm00@stud.fit.vut.cz>
 """

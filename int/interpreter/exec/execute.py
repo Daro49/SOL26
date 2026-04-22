@@ -55,7 +55,7 @@ class Execute:
 
         # Optionally write arguments as locals in the new context
         for param, arg in zip(method.params, args, strict=False):
-            context.write(param, arg)
+            context.write_local(param, arg)
 
         try:
             result = singletons.SOL_NIL
@@ -92,18 +92,17 @@ class Execute:
 
         block = receiver.native_value
 
-        context = block.defining_context
+        context = block.defining_context.child(
+            block.defining_context.self_object
+        )
 
         for param, arg in zip(block.parameters, args, strict=False):
-            context.write(param, arg)
+            context.write_local(param, arg)
 
         result = singletons.SOL_NIL
 
         for assign in block.assigns:
             result = self.visit_assign(assign, context)
-
-        for name in block.parameters:
-            context.delete(name)
 
         return result
 

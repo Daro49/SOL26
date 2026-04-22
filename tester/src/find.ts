@@ -157,11 +157,11 @@ function determineTestType(
   hasInterpreterCodes: boolean,
   isXml: boolean
 ): TestCaseType | null {
-  if (hasParserCodes && !hasInterpreterCodes) {
+  if (hasParserCodes && !hasInterpreterCodes && !isXml) {
     return TestCaseType.PARSE_ONLY;
   }
 
-  if (!hasParserCodes && hasInterpreterCodes && isXml) {
+  if (hasInterpreterCodes && isXml) {
     return TestCaseType.EXECUTE_ONLY;
   }
 
