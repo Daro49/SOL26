@@ -9,8 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
-from interpreter.objectModel.sol_object import SolObject
 from interpreter.objectModel.sol_class import SolClass
+from interpreter.objectModel.sol_object import SolObject
 
 if TYPE_CHECKING:
     from interpreter.input_model import Method

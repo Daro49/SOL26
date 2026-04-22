@@ -13,6 +13,7 @@ from interpreter.error_codes import ErrorCode
 from interpreter.exceptions import InterpreterError
 
 if TYPE_CHECKING:
+    from interpreter.objectModel.sol_class import SolClass
     from interpreter.objectModel.sol_object import SolObject
 
 @dataclass
@@ -52,9 +53,9 @@ class Context:
 
     def write(self, name: str, value: SolObject) -> None:
         """Saves object to local context"""
-        
+
         context: Context | None = self
-        
+
         while context is not None:
             if name in context._locals:
                 context._locals[name] = value
@@ -73,6 +74,6 @@ class Context:
 
         return Context(
             self_object=self_object,
-            outer=self, 
+            outer=self,
             static_class=self.static_class
         )

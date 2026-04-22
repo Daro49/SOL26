@@ -213,13 +213,13 @@ class Execute:
             and node.receiver.var.name == "super"
         ):
             static = context.static_class
-            
+
             if static is None or static.superclass is None:
                 raise InterpreterError(
                     ErrorCode(52),
                     "Super used in a class with no superclass"
                 )
-            
+
             lookup_class = static.superclass
 
         return self.runtime.dispatch.send(

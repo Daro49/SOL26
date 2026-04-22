@@ -25,7 +25,7 @@ def register(_class: SolClass) -> None:
         "equalTo:":         SolMethod(["$a"], native_function=_equalto),
         "asString":         SolMethod([], native_function=_asstring),
         "asInteger":        SolMethod([], native_function=_asinteger),
-        
+
         "concatenateWith:":         SolMethod(
             ["$a"], native_function=_concatenatewith
         ),

@@ -92,7 +92,7 @@ class Bootstrap:
 
             if name and name in classes:
                 module.register(classes[name])
-                
+
         for _class in classes.values():
             for method in _class.methods.values():
                 method.defined_on = _class
